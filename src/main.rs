@@ -10,13 +10,12 @@ use opencv::{
 };
 
 
-
 fn main()->Result<()>{
-    let mut camera = videoio::VideoCapture::new(2, videoio::CAP_ANY)?;
-    let xml = "/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml";
+    let mut camera = videoio::VideoCapture::new(0, videoio::CAP_ANY)?;
+    let xml = r".\haarcascade_frontalface_default.xml";
     let mut face_detector = objdetect::CascadeClassifier::new(xml)?;
     let mut img = Mat::default();
-
+// facial detection loop
     loop{
         camera.read(&mut img)?;
         let mut gray = Mat::default();
@@ -25,11 +24,11 @@ fn main()->Result<()>{
         face_detector.detect_multi_scale(
             &gray, 
             &mut faces, 
-            1.4, 
+            1.2,
             2,
             objdetect::CASCADE_SCALE_IMAGE, 
             core::Size::new(10,10), 
-            core::Size::new(0,0)
+            core::Size::new(0,0),
             )?;
         if faces.len() > 0{
             for face in faces.iter(){
@@ -48,3 +47,5 @@ fn main()->Result<()>{
     }
     Ok(())
 }
+
+
