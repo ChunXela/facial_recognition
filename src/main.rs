@@ -12,7 +12,7 @@ use opencv::{
 
 fn main()->Result<()>{
     let mut camera = videoio::VideoCapture::new(0, videoio::CAP_ANY)?;
-    let xml = r".\haarcascade_frontalface_default.xml";
+    let xml = r"./haarcascade_frontalface_default.xml";
     let mut face_detector = objdetect::CascadeClassifier::new(xml)?;
     let mut img = Mat::default();
 // facial detection loop
