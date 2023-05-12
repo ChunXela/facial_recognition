@@ -57,8 +57,6 @@ fn show_image(img: &Mat, name: &str) -> Result<()> {
     highgui::named_window(name, highgui::WINDOW_NORMAL)?;
 
     // Resize the window to 800x600
-    highgui::resize_window(name, 800, 600)?;
-
     // Display the image in the window
     highgui::imshow(name, img)?;
 
