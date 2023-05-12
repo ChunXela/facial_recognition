@@ -1,76 +1,91 @@
 use opencv::{
-    Result,
-    prelude::*,
-    objdetect,
-    highgui,
-    imgproc,
-    core, 
-    types,
-    videoio,
+    Result,                
+    prelude::*,            
+    objdetect,             
+    highgui,               
+    imgproc,               
+    core,                  
+    types,                 
+    videoio,               
 };
 
-/// Detects faces in an image captured by a camera using a Haar cascade classifier.
-/// Returns a vector of rectangles representing the detected faces, or None if no faces were detected.
+// This function reads a frame from the camera, detects faces in the frame, and returns their positions
 fn detect_faces(camera: &mut videoio::VideoCapture, face_detector: &mut objdetect::CascadeClassifier) -> Result<Option<types::VectorOfRect>> {
-    // Capture an image from the camera
+    // Read a frame from the camera
     let mut img = Mat::default();
     camera.read(&mut img)?;
 
-    // Convert the image to grayscale
+    // Convert the frame to grayscale
     let mut gray = Mat::default();
     imgproc::cvt_color(&img, &mut gray, imgproc::COLOR_BGR2GRAY, 0)?;
 
     // Detect faces in the grayscale image
     let mut faces = types::VectorOfRect::new();
     face_detector.detect_multi_scale(
-        &gray, 
-        &mut faces, 
-        1.4, 
+        &gray,
+        &mut faces,
+        1.4,
         2,
-        objdetect::CASCADE_SCALE_IMAGE, 
-        core::Size::new(10,10), 
+        objdetect::CASCADE_SCALE_IMAGE,
+        core::Size::new(10,10),
         core::Size::new(0,0)
     )?;
 
-    // Return the detected faces, if any
+    // If at least one face was detected, return the positions of the faces
     Ok(if faces.len() > 0 { Some(faces) } else { None })
 }
 
-/// Draws rectangles around the detected faces in an image and displays the image.
+// This function draws rectangles around the detected faces in the image
 fn draw_faces(img: &mut Mat, faces: &types::VectorOfRect) -> Result<()> {
-    // Draw a rectangle around each detected face
+    // Loop through all detected faces and draw a rectangle around each one
     for face in faces.iter() {
         imgproc::rectangle(
-            img, 
-            face, 
-            core::Scalar::new(0f64, 255f64, 0f64, 0f64), 
-            2, 
-            imgproc::LINE_8, 
+            img,
+            face,
+            core::Scalar::new(0f64, 255f64, 0f64, 0f64),
+            2,
+            imgproc::LINE_8,
             0
         )?;
     }
-
-    // Display the image
-    highgui::imshow("gray", img)?;
-    highgui::wait_key(1)?;
     Ok(())
 }
 
+// This function displays the image in a window
+fn show_image(img: &Mat, name: &str) -> Result<()> {
+    // Create a window with the given name
+    highgui::named_window(name, highgui::WINDOW_NORMAL)?;
+
+    // Resize the window to 800x600
+    highgui::resize_window(name, 800, 600)?;
+
+    // Display the image in the window
+    highgui::imshow(name, img)?;
+
+    // Wait for a key press for 1ms
+    highgui::wait_key(1)?;
+
+    Ok(())
+}
+
+// The main function that sets up the camera and face detector and continuously detects faces
 fn main() -> Result<()> {
-    // Create a new video capture object for camera 2
+    // Open the default camera (id = 0)
     let mut camera = videoio::VideoCapture::new(0, videoio::CAP_ANY)?;
 
-    // Load the Haar cascade classifier for frontal faces
+    // Load the face detector XML file
     let xml = r"./haarcascade_frontalface_default.xml";
     let mut face_detector = objdetect::CascadeClassifier::new(xml)?;
 
     loop {
-        // Detect faces in the captured image
+        // Detect faces in the current camera frame
         match detect_faces(&mut camera, &mut face_detector)? {
             Some(faces) => {
-                // Draw rectangles around the detected faces and display the image
+                // If faces are detected, read the frame from the camera again and draw rectangles around the faces
                 let mut img = Mat::default();
+                camera.read(&mut img)?;
                 draw_faces(&mut img, &faces)?;
+                show_image(&img, "Face Detection")?;
             },
             None => {}
         }
